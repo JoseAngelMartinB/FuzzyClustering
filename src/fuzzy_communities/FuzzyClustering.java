@@ -5,7 +5,6 @@
  */
 package fuzzy_communities;
 
-import static java.lang.Math.abs;
 import java.util.Random;
 
 /**
@@ -87,8 +86,8 @@ public class FuzzyClustering {
                                 * (inverse_of_c - U[k][i]);
                     }
                     dD[k][l] = 2 * sumatory; 
-                    if(abs(dD[k][l]) > max){
-                        max = abs(dD[k][l]);
+                    if(Math.abs(dD[k][l]) > max){
+                        max = Math.abs(dD[k][l]);
                     }
                 }
             }
@@ -121,8 +120,33 @@ public class FuzzyClustering {
     private double [][] getU(){
         double [][] U = new double [c][N];
         int i, j;
-        double sum_colum; //To normalize the numbers
+        double sum_colum, d, c_value, alpha, Z_value, U_value, V, aux;
+        boolean continueIteration = true;
         Random ran = new Random();
+        alpha = 1.0;
+        
+        //Gamma(alpha,1) Generator for alpha >= 1
+        //Step 1
+        d = alpha - 1/3;
+        c_value = 1/Math.sqrt(9 * d);
+        
+        //This goes insiede the double for loop!!!!!!!!!!!!!!!!!!!!!
+        while(continueIteration){
+            //Step 2
+            Z_value = ran.nextGaussian(); //Random value from a Normal distribution
+            U_value = ran.nextDouble(); //Random value from a Uniform distribution
+            
+            //Step 3
+            aux = (1 + c_value * Z_value);
+            V = aux * aux * aux;
+            if(Z_value > -1/c_value && 
+                    U_value < (1.0/2*Z_value*Z_value + d - d*V + d*Math.log(V))){
+                //return d*V
+                continueIteration = false;
+            }
+
+        }
+        
         
         for(j = 0; j < N; j++){
             sum_colum = 0;
