@@ -115,45 +115,48 @@ public class FuzzyClustering {
     
     /**
      * Calculates the initial partition array U used in the algorithm.
+     * It uses a Gamma distribution to generate random numbers that are going to
+     *  be used to fill the array. Then, the array is normalized so that
+     *  the sum of a node membership to all classes is 1.
      * @return U
      */
     private double [][] getU(){
         double [][] U = new double [c][N];
         int i, j;
-        double sum_colum, d, c_value, alpha, Z_value, U_value, V, aux;
-        boolean continueIteration = true;
+        double sum_colum, d_constant, c_constant, alpha, Z_ran_variable, 
+                U_ran_variable, V, aux;
+        boolean continueIteration;
         Random ran = new Random();
         alpha = 1.0;
         
         //Gamma(alpha,1) Generator for alpha >= 1
-        //Step 1
-        d = alpha - 1/3;
-        c_value = 1/Math.sqrt(9 * d);
-        
-        //This goes insiede the double for loop!!!!!!!!!!!!!!!!!!!!!
-        while(continueIteration){
-            //Step 2
-            Z_value = ran.nextGaussian(); //Random value from a Normal distribution
-            U_value = ran.nextDouble(); //Random value from a Uniform distribution
-            
-            //Step 3
-            aux = (1 + c_value * Z_value);
-            V = aux * aux * aux;
-            if(Z_value > -1/c_value && 
-                    U_value < (1.0/2*Z_value*Z_value + d - d*V + d*Math.log(V))){
-                //return d*V
-                continueIteration = false;
-            }
-
-        }
-        
+        //Step 1 - Constant values
+        d_constant = alpha - 1.0/3.0;
+        c_constant = 1.0/Math.sqrt(9 * d_constant);
         
         for(j = 0; j < N; j++){
             sum_colum = 0;
-            for(i = 0; i < c; i++){
-                U[i][j] = ran.nextDouble();
+            for (i = 0; i < c; i++) {
+                continueIteration = true;
+                while (continueIteration) {
+                    //Step 2 - Generate random variables Z and U
+                    Z_ran_variable = ran.nextGaussian(); //Random value from a Normal distribution
+                    U_ran_variable = ran.nextDouble(); //Random value from a Uniform distribution
+
+                    //Step 3 - Finish condition
+                    aux = (1 + c_constant * Z_ran_variable);
+                    V = aux * aux * aux;
+                    if (Z_ran_variable > -1.0 / c_constant
+                            && Math.log(U_ran_variable) < (1.0 / 2 * Z_ran_variable
+                            * Z_ran_variable + d_constant - d_constant * V
+                            + d_constant * Math.log(V))) {
+                        U[i][j] = d_constant * V;
+                        continueIteration = false;
+                    }
+                } //End while
                 sum_colum += U[i][j];
             }
+            
             for(i = 0; i < c; i++){
                 U[i][j] = U[i][j] / sum_colum;
             }
