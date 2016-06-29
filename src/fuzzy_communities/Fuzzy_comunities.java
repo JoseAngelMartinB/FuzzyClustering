@@ -39,7 +39,7 @@ public class Fuzzy_comunities {
         FuzzyClustering fc = new FuzzyClustering(A, c);
         U = fc.getCommunities();
         
-        //Print U
+        // Print U
         int i, j;
         for(i = 0; i < c; i++){
             System.out.print("Class " + i + ": ");
