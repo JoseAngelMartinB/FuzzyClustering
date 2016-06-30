@@ -265,9 +265,61 @@ public class FuzzyClustering {
         t2 = 2.0 * tol1;
        
         //main loop
-        for (t = 0; Math.abs(x - xm) > (t2 - .5 * (b - a)) && t < tmax; t++) {
+        for(t = 0; Math.abs(x - xm) > (t2 - .5 * (b - a)) && t < tmax; t++){
+            p = q = r = 0.0;
+            if(Math.abs(e) > tol1){ // fit the parabola
+                r = (x - w) * (fx - fv);
+                q = (x - v) * (fx - fw);
+                p = (x - v) * q - (x - w) * r;
+                q = 2.0 * (q - r);
+                if(q > 0.0){
+                    p = -p;
+                }else{
+                    q = -q;
+                }
+                r = e;
+                e = d;
+            }
+            if((Math.abs(p) < Math.abs(.5 * q * r))
+                    && (p > q * (a - x))
+                    && (p < q * (b - x))){ // a parabolic interpolation step
+                d = p / q;
+                u = x + d;
+                if(((u - a) < t2) || ((b - u) < t2)){ // f must not be evaluated
+                                                      // too close to a or b
+                    d = tol1;
+                    if(x >= xm){
+                        d = -d;
+                    }
+                }
+            }else{ // a golden-section step        
+                if(x < xm){
+                    e = b - x;
+                }else{
+                    e = a - x;
+                }
+                d = CGOLD * e;
+            }
 
-            // REST OF CODE
+            if(Math.abs(d) >= tol1){ // f must not be evaluated too close to x
+                u = x + d;
+            }else if(d > 0.0){ 
+                u = x + tol1;
+            }else{
+                u = x - tol1;
+            }
+            fu = function(u, U, dD);
+                          
+            if(fu <= fx){
+                if(u >= x){
+                    a = x;
+                }else{
+                    b = x;
+                }
+            }
+                
+            // REST OF CODE ..............................
+            // Numerial Recipies
             
             
             xm = .5 * (a + b);
