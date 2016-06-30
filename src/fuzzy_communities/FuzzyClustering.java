@@ -57,10 +57,10 @@ public class FuzzyClustering {
         
         while(continueIteration){
             // Calculate s
-            for (i = 0; i < N; i++) {
-                for (j = 0; j < N; j++) {
+            for(i = 0; i < N; i++){
+                for(j = 0; j < N; j++){
                     s[i][j] = 0;
-                    for (k = 0; k < c; k++) {
+                    for(k = 0; k < c; k++){
                         s[i][j] += U[k][i] * U[k][j];
                     }
                 }
@@ -94,7 +94,7 @@ public class FuzzyClustering {
                 // Step 4
                 for(i = 0; i < c; i++){
                     for(j = 0; j < N; j++){
-                        U[i][j] =  U[i][j] - alpha() * dD[i][j];
+                        U[i][j] =  U[i][j] - alpha(U, dD) * dD[i][j];
                     }
                 }
                 
@@ -112,7 +112,7 @@ public class FuzzyClustering {
      * It uses a Gamma distribution to generate random numbers that are going to
      * be used to fill the array. Then, the array is normalized so that
      * the sum of a node membership to all classes is 1.
-     * @return U
+     * @return  U
      */
     private double [][] getU(){
         double [][] U = new double [c][N];
@@ -163,7 +163,7 @@ public class FuzzyClustering {
     /**
      * Calculates D.
      * @param s     The value of s in a given moment on the graph. 
-     * @return D
+     * @return      The value of D
      */
     private double D(double[][] s) {
         double aux, D = 0.0;
@@ -184,9 +184,11 @@ public class FuzzyClustering {
      * Uses line minimization bracketing the minimum by the golden rule and 
      * minimum location using inverse parabolic interpolation or, if it does 
      * not work, golden ratio search.
-     * @return alpha
+     * @param U     The current U matrix.
+     * @param dD    The current value of the derivate of D.
+     * @return      alpha
      */
-    private double alpha(){
+    private double alpha(double[][] U, double[][] dD){
         double a, b, c, x, fa, fb, fc, fx, aux, tol, golden =  1.6180339887;
         tol = 3e-8; //Square root of machine double precision ??????????????????????????????????
         
@@ -194,8 +196,8 @@ public class FuzzyClustering {
         // Initializing
 	a = 0.0;
 	b = 1.0;
-	fa = function(a);
-	fb = function(b);
+	fa = function(a, U, dD);
+	fb = function(b, U, dD);
 	
 	if (fb > fa) {  // We always want fb < fa (we always 
 		aux = a;      // search in the decreasing direction)
@@ -208,7 +210,7 @@ public class FuzzyClustering {
         
         c = b + golden * (b-a); // Increasing by the golden ratio of the
 	                        // a-b segment
-	fc = function(c) ;
+	fc = function(c, U, dD) ;
 	
 	while (fc < fb) { // Searching until the function increases
 		a = b;
@@ -216,13 +218,13 @@ public class FuzzyClustering {
 		b = c;
 		fb = fc;
 		c = b + golden * (b-a);
-		fc = function(c);
+		fc = function(c, U, dD);
 	}
         
         /* Minimum bracketed */
         
         // Computing minimum applying Brent's approach
-        x = brent(a, b, c, tol);
+        x = brent(a, b, c, tol, U, dD);
         
         return x;
     }
@@ -236,10 +238,13 @@ public class FuzzyClustering {
      * @param c     Right endpoint of initial interval
      * @param tol   Desired length of the interval in which the minimum will be 
      *              determined to lie
-     * @return x    The abscissa of the minimum value of the function in the
+     * @param U     The current U matrix.
+     * @param dD    The current value of the derivate of D.
+     * @return      The abscissa of the minimum value of the function in the
      *              interval [a,c]
      */
-    private double brent(double a, double b, double c, double tol){
+    private double brent(double a, double b, double c, double tol, double[][] U, 
+            double[][] dD){
         double CGOLD, d, e, eps, xm, p, q, r, tol1, t2, u, v, w, fu, fv , fw, 
                 fx, x, tol3;
         int t, tmax = 100;
@@ -252,7 +257,7 @@ public class FuzzyClustering {
 
         x = w = v = b;
         e = 0.0;
-        fw = fv = fx = function(x);
+        fw = fv = fx = function(x, U, dD);
         tol3 = tol / 3.0;
 
         xm = .5 * (a + b);
@@ -276,6 +281,36 @@ public class FuzzyClustering {
         }
         
         return x;
+    }
+    
+    /**
+     * Function that calculates the error (D) used in the calculous of the 
+     * alpha.
+     * @param alpha     The value of alpha in a given moment.
+     * @param U         The current U matrix.
+     * @param dD        The current value of the derivate of D.
+     * @return          The value of D for the given input.
+     */
+    private double function(double alpha, double[][] U, double[][] dD){
+        double[][] Uaux = new double[c][N], s = new double[N][N];
+        int i, j, k;
+        for(i = 0; i < c; i++){
+            for(j = 0; j < N; j++){
+                Uaux[i][j] = U[i][j] - alpha * dD[i][j];
+            }
+        }
+
+        for(i = 0; i < N; i++){
+            for(j = 0; j < N; j++){
+                s[i][j] = 0.0;
+                for (k = 0; k < c; k++) {
+                    s[i][j] += Uaux[k][i] * Uaux[k][j];
+                }
+            }
+        }
+        
+        return D(s);    // Returns the result of calling function D() with the 
+                        // current value of s.
     }
     
     
