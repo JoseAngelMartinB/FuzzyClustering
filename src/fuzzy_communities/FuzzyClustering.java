@@ -190,7 +190,7 @@ public class FuzzyClustering {
      */
     private double alpha(double[][] U, double[][] dD){
         double a, b, c, x, fa, fb, fc, fx, aux, tol, golden =  1.6180339887;
-        tol = 3e-8; //Square root of machine double precision ??????????????????????????????????
+        tol = 3e-8; //Square root of machine double precision
         
         /* Bracketing the minimum using golden ratio */
         // Initializing
@@ -225,7 +225,7 @@ public class FuzzyClustering {
         
         // Computing minimum applying Brent's approach
         x = brent(a, b, c, tol, U, dD);
-        
+        System.out.println(x);
         return x;
     }
     
@@ -255,7 +255,7 @@ public class FuzzyClustering {
         tol1 = eps + 1.0;
         eps = Math.sqrt(eps);
 
-        x = w = v = b;
+        x = w = v = a + CGOLD*(b-a);
         e = 0.0;
         fw = fv = fx = function(x, U, dD);
         tol3 = tol / 3.0;
@@ -267,6 +267,7 @@ public class FuzzyClustering {
         //main loop
         for(t = 0; Math.abs(x - xm) > (t2 - .5 * (b - a)) && t < tmax; t++){
             p = q = r = 0.0;
+            
             if(Math.abs(e) > tol1){ // fit the parabola
                 r = (x - w) * (fx - fv);
                 q = (x - v) * (fx - fw);
@@ -280,6 +281,7 @@ public class FuzzyClustering {
                 r = e;
                 e = d;
             }
+            
             if((Math.abs(p) < Math.abs(.5 * q * r))
                     && (p > q * (a - x))
                     && (p < q * (b - x))){ // a parabolic interpolation step
@@ -316,11 +318,28 @@ public class FuzzyClustering {
                 }else{
                     b = x;
                 }
+                v = w;
+                fv = fw;
+                w = x;
+                fw = fx;
+                x = u;
+                fx = fu;
+            }else{
+                if(u < x){
+                    a = u;
+                }else{
+                    b = u;
+                }
+                if(fu <= fw || w == x){
+                    v = w;
+                    w = u;
+                    fv = fw;
+                    fw = fu;
+                }else if(fu <= fv || v == x || v == w){
+                    v = u;
+                    fv = fu;
+                }
             }
-                
-            // REST OF CODE ..............................
-            // Numerial Recipies
-            
             
             xm = .5 * (a + b);
             tol1 = eps * Math.abs(x) + tol3;
