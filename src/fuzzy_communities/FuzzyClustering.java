@@ -40,7 +40,7 @@ public class FuzzyClustering {
         double [][] U, dD, s;
         boolean continueIteration = true;
         int t, n_max_iterations, i, j, k, l;
-        double max, inverse_of_c, epsilon, sumatory, aux;
+        double max, inverse_of_c, epsilon, sumatory, aux, alpha;
         s = new double [N][N]; 
         dD = new double [c][N]; // Partial derivative of D
         for(i = 0; i < c; i++){
@@ -92,7 +92,7 @@ public class FuzzyClustering {
                 continueIteration = false;
             }else{
                 // Step 4
-                double alpha = alpha(U, dD);
+                alpha = alpha(U, dD);
                 for(i = 0; i < c; i++){
                     for(j = 0; j < N; j++){
                         U[i][j] =  U[i][j] - alpha * dD[i][j];
