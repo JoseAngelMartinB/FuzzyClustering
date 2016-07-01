@@ -92,9 +92,10 @@ public class FuzzyClustering {
                 continueIteration = false;
             }else{
                 // Step 4
+                double alpha = alpha(U, dD);
                 for(i = 0; i < c; i++){
                     for(j = 0; j < N; j++){
-                        U[i][j] =  U[i][j] - alpha(U, dD) * dD[i][j];
+                        U[i][j] =  U[i][j] - alpha * dD[i][j];
                     }
                 }
                 
@@ -225,7 +226,6 @@ public class FuzzyClustering {
         
         // Computing minimum applying Brent's approach
         x = brent(a, b, c, tol, U, dD);
-        System.out.println(x);
         return x;
     }
     
@@ -243,19 +243,22 @@ public class FuzzyClustering {
      * @return      The abscissa of the minimum value of the function in the
      *              interval [a,c]
      */
-    private double brent(double a, double b, double c, double tol, double[][] U, 
+    private double brent(double ax, double bx, double cx, double tol, double[][] U, 
             double[][] dD){
         double CGOLD, d, e, eps, xm, p, q, r, tol1, t2, u, v, w, fu, fv , fw, 
-                fx, x, tol3;
+                fx, x, tol3, a, b;
         int t, tmax = 100;
         CGOLD = .5 * (3.0 - Math.sqrt(5.0));
         d = 0.0;
+        
+        a = (ax < cx ? ax : cx);
+        b = (ax > cx ? ax : cx);
 
         eps = 1.2e-16; //Machine precision
         tol1 = eps + 1.0;
         eps = Math.sqrt(eps);
 
-        x = w = v = a + CGOLD*(b-a);
+        x = w = v = bx;
         e = 0.0;
         fw = fv = fx = function(x, U, dD);
         tol3 = tol / 3.0;
