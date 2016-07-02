@@ -182,74 +182,54 @@ public class FuzzyClustering {
      * Calculates alpha constant.
      * Alpha is a small step size constant used to calculate the next partition
      * in the iteration.
-     * Uses line minimization bracketing the minimum by the golden rule and 
-     * minimum location using inverse parabolic interpolation or, if it does 
-     * not work, golden ratio search.
+     * Uses a line minimization implementing Brent's method which brackes the 
+     * minimum by the golden rule and minimum location using inverse parabolic 
+     * interpolation or, if it does not work, golden ratio search.
      * @param U     The current U matrix.
      * @param dD    The current value of the derivate of D.
      * @return      alpha
      */
     private double alpha(double[][] U, double[][] dD){
-        double a, b, c, x, fa, fb, fc, fx, aux, tol, golden =  1.6180339887;
+        double ax, bx, cx, x, fa, fb, fc, fx, aux, tol, golden =  1.6180339887,
+                CGOLD, d, e, eps, xm, p, q, r, tol1, t2, u, v, w, fu, fv , fw, 
+                tol3, a, b;
         tol = 3e-8; //Square root of machine double precision
+        int t, tmax = 100;
+        CGOLD = .5 * (3.0 - Math.sqrt(5.0));
+        d = 0.0;
         
         /* Bracketing the minimum using golden ratio */
         // Initializing
-	a = 0.0;
-	b = 1.0;
-	fa = function(a, U, dD);
-	fb = function(b, U, dD);
+	ax = 0.0;
+	bx = 1.0;
+	fa = function(ax, U, dD);
+	fb = function(bx, U, dD);
 	
 	if (fb > fa) {  // We always want fb < fa (we always 
-		aux = a;      // search in the decreasing direction)
-		a = b;
-		b = aux;
+		aux = ax;      // search in the decreasing direction)
+		ax = bx;
+		bx = aux;
 		aux = fa;
 		fa = fb;
 		fb = aux;
 	}
         
-        c = b + golden * (b-a); // Increasing by the golden ratio of the
+        cx = bx + golden * (bx-ax); // Increasing by the golden ratio of the
 	                        // a-b segment
 	fc = function(c, U, dD) ;
 	
 	while (fc < fb) { // Searching until the function increases
-		a = b;
+		ax = bx;
 		fa = fb;
-		b = c;
+		bx = c;
 		fb = fc;
-		c = b + golden * (b-a);
+		cx = bx + golden * (bx-ax);
 		fc = function(c, U, dD);
 	}
         
         /* Minimum bracketed */
         
         // Computing minimum applying Brent's approach
-        x = brent(a, b, c, tol, U, dD);
-        return x;
-    }
-    
-    /**
-     * This method performs a 1-dimensional minimization.
-     * It implements Brent's method which combines a golden-section search and 
-     * parabolic interpolation.
-     * @param a     Left endpoint of initial interval
-     * @param b     Point between a and c and f(b) is less than f(a) and f(c)
-     * @param c     Right endpoint of initial interval
-     * @param tol   Desired length of the interval in which the minimum will be 
-     *              determined to lie
-     * @param U     The current U matrix.
-     * @param dD    The current value of the derivate of D.
-     * @return      The abscissa of the minimum value of the function in the
-     *              interval [a,c]
-     */
-    private double brent(double ax, double bx, double cx, double tol, double[][] U, 
-            double[][] dD){
-        double CGOLD, d, e, eps, xm, p, q, r, tol1, t2, u, v, w, fu, fv , fw, 
-                fx, x, tol3, a, b;
-        int t, tmax = 100;
-        CGOLD = .5 * (3.0 - Math.sqrt(5.0));
-        d = 0.0;
         
         a = (ax < cx ? ax : cx);
         b = (ax > cx ? ax : cx);
@@ -368,6 +348,8 @@ public class FuzzyClustering {
     private double function(double alpha, double[][] U, double[][] dD){
         double[][] Uaux = new double[c][N], s = new double[N][N];
         int i, j, k;
+        double aux, D = 0.0;
+        
         for(i = 0; i < c; i++){
             for(j = 0; j < N; j++){
                 Uaux[i][j] = U[i][j] - alpha * dD[i][j];
@@ -383,8 +365,14 @@ public class FuzzyClustering {
             }
         }
         
-        return D(s);    // Returns the result of calling function D() with the 
-                        // current value of s.
+        for (i = 0; i < N; i++) {
+            for (j = 0; j < N; j++) {
+                aux = A[i][j] - s[i][j];
+                D += aux * aux;
+            }
+        }
+        
+        return D;    // Returns the the current value of s.
     }
     
     
