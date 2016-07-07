@@ -1,8 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/*****************************************************************************
+*
+* Authors: SciCom research group-E.S.I. Universidad de Castilla-La Mancha
+*          Paseo de la Universidad 4, 13004-Ciudad Real. SPAIN
+*
+* Release date: July 7, 2016
+*
+* Purpose: To implement class SparseArray
+*
+*****************************************************************************/
+
 package fuzzy_communities;
 
 import java.util.Random;
@@ -12,7 +18,7 @@ import java.util.Random;
  * @author joseangel
  */
 public class FuzzyClustering {
-    private int [][] A; // Adjacency matrix
+    private SparseArray A; // Adjacency matrix
     private int N; // Number of vertices
     private int c; // Number of communities
     
@@ -22,11 +28,12 @@ public class FuzzyClustering {
      * 
      * @param A The adjacency matrix we are working with.
      * @param c The number of communities we are interesting to calculate.
+     * @param N The number of nodes of the Graph.
      */
-    public FuzzyClustering(int[][] A, int c) {
+    public FuzzyClustering(SparseArray A, int c, int N) {
         this.A = A;
 	this.c = c;
-        N = A.length;
+        this.N = N;
     }
     
     /**
@@ -49,7 +56,7 @@ public class FuzzyClustering {
             }
         }
         epsilon = 0.001;
-        n_max_iterations = 1000;
+        n_max_iterations = 100;
         
         // Step 1
         U = getU();
@@ -75,7 +82,7 @@ public class FuzzyClustering {
                 for(l = 0; l < N; l++){
                     sumatory = 0.0;
                     for(i = 0; i < N; i++){
-                        sumatory += ((A[i][l] - s[i][l]) + (A[l][i] - s[l][i])) 
+                        sumatory += ((A.get(i, l) - s[i][l]) + (A.get(l, i) - s[l][i])) 
                                 * (inverse_of_c - U[k][i]);
                     }
                     dD[k][l] = 2 * sumatory; 
@@ -107,6 +114,82 @@ public class FuzzyClustering {
         
         return U;
     }
+    
+    /**
+     * Finding communities.
+     * Applies the algorithm to calculate the fuzzy communities of each vertex
+     * of the graph.
+     * @return  An array U[c][N] with the pertenence of each vertex to each 
+     *          class.
+     */
+    public double [][] findCommunities(){
+
+      double [][] dD;
+      double [][] U;
+      double alpha, max, inverse_of_c, epsilon, aux, sumatory, zero, two;
+      boolean continueIteration = true;
+      int t, n_max_iterations, i, j, k, l, m;
+      
+      dD = new double [c][N]; // Partial derivative of D
+      
+      
+      // General constants
+      zero = 0.0;
+      two  = 2.0;
+      inverse_of_c = 1.0/c;
+      epsilon = 0.001;         // Derivatives limit
+      n_max_iterations = 100;  // Max number of iterations allowed
+      
+      
+      // Step 1
+      U = getU();
+      t = 0;
+      
+      while(continueIteration){      
+        
+        // Step 2
+        max = Double.NEGATIVE_INFINITY;
+        for(l = 0; l < N; l++){
+          for(k = 0; k < c; k++){
+            sumatory = zero;
+            for(i = 0; i < N; i++){
+              aux = zero;
+              for (m = 0; m < c; m++) {   // Computing s matrix elements 
+                aux += U[m][i] * U[m][l]; // on the fly
+              }
+              sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
+                        * (inverse_of_c - U[k][i]);
+            }
+            dD[k][l] = two * sumatory; 
+            if(Math.abs(dD[k][l]) > max) max = Math.abs(dD[k][l]);
+          }
+        }
+        System.out.println("Iteration " + t + ". Max abs val of dD " + max
+                           + "\n");
+
+        // Step 3
+        if(max < epsilon || t == n_max_iterations){ // End conditions
+          continueIteration = false;
+        } else {
+          // Step 4
+          alpha = alpha (U, dD);
+          for(i = 0; i < c; i++){
+            for(j = 0; j < N; j++){
+              U[i][j] -=  alpha * dD[i][j];
+            }
+          }
+          
+          // Step 5
+          t++;  
+        }
+      }
+              
+      if(t == n_max_iterations) throw new RuntimeException("ERROR. Max number "
+                                 + "of iterations allowed in findCommunities "
+                                 + "method exceeded");
+      
+      return U;
+    }    
     
     /**
      * Calculates the initial partition array U used in the algorithm.
@@ -171,7 +254,7 @@ public class FuzzyClustering {
         int i, j;
         for (i = 0; i < N; i++) {
             for (j = 0; j < N; j++) {
-                aux = A[i][j] - s[i][j];
+                aux = A.get(i, j) - s[i][j];
                 D += aux * aux;
             }
         }
@@ -367,13 +450,12 @@ public class FuzzyClustering {
         
         for (i = 0; i < N; i++) {
             for (j = 0; j < N; j++) {
-                aux = A[i][j] - s[i][j];
+                aux = A.get(i, j) - s[i][j];
                 D += aux * aux;
             }
         }
         
-        return D;    // Returns the the current value of s.
+        return D;    // Returns the current value of D.
     }
-    
     
 }

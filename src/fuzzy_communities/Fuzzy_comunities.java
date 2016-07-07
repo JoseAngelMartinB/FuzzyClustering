@@ -1,8 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/*****************************************************************************
+*
+* Authors: SciCom research group-E.S.I. Universidad de Castilla-La Mancha
+*          Paseo de la Universidad 4, 13004-Ciudad Real. SPAIN
+*
+* Release date: July 7, 2016
+*
+* Purpose: To implement class SparseArray
+*
+*****************************************************************************/
+
 package fuzzy_communities;
 
 import java.io.*;
@@ -18,7 +24,8 @@ public class Fuzzy_comunities {
         String file = "Graph1.dat";
         int N = 7;
         int c = 2;
-        int[][] A = new int[N][N];
+        
+        SparseArray A = new SparseArray(N);
         double [][] U = new double [c][N];
 
         System.out.println("Creating graph " + file + "...");
@@ -28,7 +35,7 @@ public class Fuzzy_comunities {
             
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    A[i][j] = read.nextInt();
+                    A.put(i, j, read.nextInt());
                 }
             }
             read.close();
@@ -36,8 +43,8 @@ public class Fuzzy_comunities {
             System.err.println("File " + file + " could not be opened.");
         }
 
-        FuzzyClustering fc = new FuzzyClustering(A, c);
-        U = fc.getCommunities();
+        FuzzyClustering fc = new FuzzyClustering(A, c, N);
+        U = fc.findCommunities();
         
         // Print U
         int i, j;
