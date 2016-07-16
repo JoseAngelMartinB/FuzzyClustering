@@ -192,6 +192,125 @@ public class FuzzyClustering {
     }    
     
     /**
+     * Finding communities using conjugate gradient.
+     * Applies the algorithm to calculate the fuzzy communities of each vertex
+     * of the graph.
+     * @return  An array U[c][N] with the pertenence of each vertex to each 
+     *          class.
+     */
+    public double [][] findCommunities_GC(){
+
+      double [][] dD, g, h;
+      double [][] U;
+      double alpha, max, inverse_of_c, epsilon, aux, sumatory, zero, two, 
+             gg, dgg, gam;
+      boolean continueIteration = true;
+      int t, n_max_iterations, i, j, k, l, m;
+      
+      dD = new double [c][N]; // Partial derivative of D
+      g  = new double [c][N]; 
+      h  = new double [c][N];     
+      
+      // General constants
+      zero = 0.0;
+      two  = 2.0;
+      inverse_of_c = 1.0/c;
+      epsilon = 0.001;         // Derivatives limit
+      n_max_iterations = 100;  // Max number of iterations allowed
+      
+      
+      // Initializing U
+      U = getU();
+      t = 0;
+
+      // Computing gradients
+      for(l = 0; l < N; l++){
+        for(k = 0; k < c; k++){
+          sumatory = zero;
+          for(i = 0; i < N; i++){
+            aux = zero;
+            for (m = 0; m < c; m++) {   // Computing s matrix elements 
+              aux += U[m][i] * U[m][l]; // on the fly
+            }
+            sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
+                      * (inverse_of_c - U[k][i]);
+          }
+          dD[k][l] = two * sumatory; 
+        }
+      }
+
+      for (i = 0; i < c; i++){
+        for (j =0; j < N; j++) {
+          g[i][j] = -dD[i][j];
+          dD[i][j] = h[i][j] = g[i][j];
+        }
+      }
+     
+      
+      while(continueIteration){      
+        
+        // Computing minimum along the search direction (-dD)
+        alpha = alpha (U, dD);
+        for(i = 0; i < c; i++){
+          for(j = 0; j < N; j++){
+            U[i][j] -=  alpha * dD[i][j];
+          }
+        }
+        
+        // Computing gradients
+        max = Double.NEGATIVE_INFINITY;
+        for(l = 0; l < N; l++){
+          for(k = 0; k < c; k++){
+            sumatory = zero;
+            for(i = 0; i < N; i++){
+              aux = zero;
+              for (m = 0; m < c; m++) {   // Computing s matrix elements 
+                aux += U[m][i] * U[m][l]; // on the fly
+              }
+              sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
+                        * (inverse_of_c - U[k][i]);
+            }
+            dD[k][l] = two * sumatory; 
+            if(Math.abs(dD[k][l]) > max) max = Math.abs(dD[k][l]);
+          }
+        }
+        System.out.println("Iteration " + t + ". Max abs val of dD " + max
+                           + "\n");
+
+        // Step 3
+        if(max < epsilon || t == n_max_iterations){ // End conditions
+          continueIteration = false;
+        } else {
+          // Applying conjugate gradient
+          
+          gg = dgg = zero;
+          for (i = 0; i < c; i++){
+            for (j =0; j < N; j++) {
+              gg += g[i][j] *g[i][j];
+              dgg += (dD[i][j] + g[i][j]) * dD[i][j];
+            }
+          }
+          gam = dgg / gg; 
+
+          for (i = 0; i < c; i++){
+            for (j =0; j < N; j++) {
+              g[i][j] = -dD[i][j];
+              dD[i][j] = h[i][j] = g[i][j] + gam * h[i][j];
+            }
+          }
+          // Step 5
+          t++;  
+        }
+      }
+              
+      if(t == n_max_iterations) throw new RuntimeException("ERROR. Max number "
+                                 + "of iterations allowed in findCommunities_GC"
+                                 + " method exceeded");
+      
+      return U;
+    }    
+        
+    /**
      * Calculates the initial partition array U used in the algorithm.
      * It uses a Gamma distribution to generate random numbers that are going to
      * be used to fill the array. Then, the array is normalized so that
