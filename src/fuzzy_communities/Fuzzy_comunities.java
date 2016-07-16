@@ -44,7 +44,7 @@ public class Fuzzy_comunities {
         }
 
         FuzzyClustering fc = new FuzzyClustering(A, c, N);
-        U = fc.findCommunities();
+        U = fc.findCommunities_GC();
         
         // Print U
         int i, j;
