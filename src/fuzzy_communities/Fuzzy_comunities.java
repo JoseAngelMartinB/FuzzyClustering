@@ -25,6 +25,8 @@ public class Fuzzy_comunities {
         int N = 7;
         int c = 2;
         
+        int two_m = 0; // Two times the number of edges in the network.
+        int value;
         SparseArray A = new SparseArray(N);
         double [][] U = new double [c][N];
 
@@ -35,7 +37,11 @@ public class Fuzzy_comunities {
             
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    A.put(i, j, read.nextInt());
+                    value = read.nextInt();
+                    A.put(i, j, value);
+                    if(value != 0){
+                        two_m++;
+                    }
                 }
             }
             read.close();
@@ -43,7 +49,7 @@ public class Fuzzy_comunities {
             System.err.println("File " + file + " could not be opened.");
         }
 
-        FuzzyClustering fc = new FuzzyClustering(A, c, N);
+        FuzzyClustering fc = new FuzzyClustering(A, c, N, two_m);
         U = fc.findCommunities_GC();
         
         // Print U
