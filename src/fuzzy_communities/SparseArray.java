@@ -70,4 +70,14 @@ public class SparseArray {
     if (value == null) return 0.0;
     return value;
   }
+  
+  /**
+   * Method for retrieving the degree of the i element from the sparse array
+   * @param i The row of the element
+   * @return The degree of the element.
+   */
+  public int degree(int i){
+    int value = row[i].size();
+    return value;
+  }
 }
