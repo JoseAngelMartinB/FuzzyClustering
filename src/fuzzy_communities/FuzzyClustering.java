@@ -21,6 +21,7 @@ public class FuzzyClustering {
     private SparseArray A; // Adjacency matrix
     private int N; // Number of vertices
     private int c; // Number of communities
+    private int two_m; // Two times the number of edges in the network.
     
     /**
      * Constructor method of the class. Obtain the main data we are going to use
@@ -29,11 +30,13 @@ public class FuzzyClustering {
      * @param A The adjacency matrix we are working with.
      * @param c The number of communities we are interesting to calculate.
      * @param N The number of nodes of the Graph.
+     * @param two_m Two times the number of edges in the network.
      */
-    public FuzzyClustering(SparseArray A, int c, int N) {
+    public FuzzyClustering(SparseArray A, int c, int N, int two_m) {
         this.A = A;
 	this.c = c;
         this.N = N;
+        this.two_m = two_m;
     }
     
     /**
@@ -309,6 +312,29 @@ public class FuzzyClustering {
       
       return U;
     }    
+    
+    /**
+     * Determines the modularity of the graph.
+     * @param U     The current U matrix.
+     * @return      Q
+     */
+    private double modularity(double[][] U) {
+        int i, j, k, ki;
+        double sij, Q = 0.0, one_over_2m = 1.0 / two_m;
+
+        for(i = 0; i < N; i++){
+            ki = A.degree(i);
+            for(j = 0; j < N; j++){
+                sij = 0.0;
+                for(k = 0; k < c; k++){
+                    sij += U[k][i] * U[k][j];
+                }
+                Q += (A.get(i, j) - ki * A.degree(j) * one_over_2m) * sij;
+            }
+        }
+        Q = Q * one_over_2m;
+        return Q;
+    }
         
     /**
      * Calculates the initial partition array U used in the algorithm.
