@@ -3,7 +3,7 @@
 * Authors: SciCom research group-E.S.I. Universidad de Castilla-La Mancha
 *          Paseo de la Universidad 4, 13004-Ciudad Real. SPAIN
 *
-* Release date: July 7, 2016
+* Release date: July 21, 2016
 *
 * Purpose: To implement class SparseArray
 *
@@ -28,7 +28,7 @@ public class Fuzzy_comunities {
         int two_m = 0; // Two times the number of edges in the network.
         int value;
         SparseArray A = new SparseArray(N);
-        double [][] U = new double [c][N];
+        double [][] U = new double [N][c];
 
         System.out.println("Creating graph " + file + "...");
         try {
@@ -49,7 +49,7 @@ public class Fuzzy_comunities {
             System.err.println("File " + file + " could not be opened.");
         }
 
-        FuzzyClustering fc = new FuzzyClustering(A, c, N, two_m);
+        FuzzyClustering_2 fc = new FuzzyClustering_2(A, c, N, two_m);
         U = fc.findCommunities_GC();
         
         // Print U
@@ -57,11 +57,12 @@ public class Fuzzy_comunities {
         for(i = 0; i < c; i++){
             System.out.print("Class " + i + ": ");
             for(j = 0; j < N; j++){
-                System.out.print(U[i][j] + "  ");
+                System.out.print(U[j][i] + "  ");
             }
             System.out.print("\n");
         }
         
+        System.out.print("\nModularity: " + fc.modularity(U) + "\n");
         
     }
 

@@ -17,7 +17,7 @@ import java.util.Random;
  * 
  * @author joseangel
  */
-public class FuzzyClustering {
+public class FuzzyClustering_2 {
     private SparseArray A; // Adjacency matrix
     private int N; // Number of vertices
     private int c; // Number of communities
@@ -32,7 +32,7 @@ public class FuzzyClustering {
      * @param N The number of nodes of the Graph.
      * @param two_m Two times the number of edges in the network.
      */
-    public FuzzyClustering(SparseArray A, int c, int N, int two_m) {
+    public FuzzyClustering_2(SparseArray A, int c, int N, int two_m) {
         this.A = A;
 	this.c = c;
         this.N = N;
@@ -43,7 +43,7 @@ public class FuzzyClustering {
      * Get communities.
      * Applies the algorithm to calculate the fuzzy communities of each vertex
      * of the graph.
-     * @return  An array U[c][N] with the pertenence of each vertex to each 
+     * @return  An array U[N][c] with the pertenence of each vertex to each 
      *          class.
      */
     public double [][] getCommunities(){
@@ -52,9 +52,9 @@ public class FuzzyClustering {
         int t, n_max_iterations, i, j, k, l;
         double max, inverse_of_c, epsilon, sumatory, aux, alpha;
         s = new double [N][N]; 
-        dD = new double [c][N]; // Partial derivative of D
-        for(i = 0; i < c; i++){
-            for(j = 0; j < N; j++){
+        dD = new double [N][c]; // Partial derivative of D
+        for(i = 0; i < N; i++){
+            for(j = 0; j < c; j++){
                 dD[i][j] = 0;
             }
         }
@@ -71,7 +71,7 @@ public class FuzzyClustering {
                 for(j = 0; j < N; j++){
                     s[i][j] = 0;
                     for(k = 0; k < c; k++){
-                        s[i][j] += U[k][i] * U[k][j];
+                        s[i][j] += U[i][k] * U[j][k];
                     }
                 }
             }
@@ -86,11 +86,11 @@ public class FuzzyClustering {
                     sumatory = 0.0;
                     for(i = 0; i < N; i++){
                         sumatory += ((A.get(i, l) - s[i][l]) + (A.get(l, i) - s[l][i])) 
-                                * (inverse_of_c - U[k][i]);
+                                * (inverse_of_c - U[i][k]);
                     }
-                    dD[k][l] = 2 * sumatory; 
-                    if(Math.abs(dD[k][l]) > max){
-                        max = Math.abs(dD[k][l]);
+                    dD[l][k] = 2 * sumatory; 
+                    if(Math.abs(dD[l][k]) > max){
+                        max = Math.abs(dD[l][k]);
                     }
                 }
             }
@@ -103,8 +103,8 @@ public class FuzzyClustering {
             }else{
                 // Step 4
                 alpha = alpha(U, dD);
-                for(i = 0; i < c; i++){
-                    for(j = 0; j < N; j++){
+                for(i = 0; i < N; i++){
+                    for(j = 0; j < c; j++){
                         U[i][j] =  U[i][j] - alpha * dD[i][j];
                     }
                 }
@@ -122,7 +122,7 @@ public class FuzzyClustering {
      * Finding communities.
      * Applies the algorithm to calculate the fuzzy communities of each vertex
      * of the graph.
-     * @return  An array U[c][N] with the pertenence of each vertex to each 
+     * @return  An array U[N][c] with the pertenence of each vertex to each 
      *          class.
      */
     public double [][] findCommunities(){
@@ -133,7 +133,7 @@ public class FuzzyClustering {
       boolean continueIteration = true;
       int t, n_max_iterations, i, j, k, l, m;
       
-      dD = new double [c][N]; // Partial derivative of D
+      dD = new double [N][c]; // Partial derivative of D
       
       
       // General constants
@@ -158,13 +158,13 @@ public class FuzzyClustering {
             for(i = 0; i < N; i++){
               aux = zero;
               for (m = 0; m < c; m++) {   // Computing s matrix elements 
-                aux += U[m][i] * U[m][l]; // on the fly
+                aux += U[i][m] * U[l][m]; // on the fly
               }
               sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
-                        * (inverse_of_c - U[k][i]);
+                        * (inverse_of_c - U[i][k]);
             }
-            dD[k][l] = two * sumatory; 
-            if(Math.abs(dD[k][l]) > max) max = Math.abs(dD[k][l]);
+            dD[l][k] = two * sumatory; 
+            if(Math.abs(dD[l][k]) > max) max = Math.abs(dD[l][k]);
           }
         }
         System.out.println("Iteration " + t + ". Max abs val of dD " + max
@@ -176,8 +176,8 @@ public class FuzzyClustering {
         } else {
           // Step 4
           alpha = alpha (U, dD);
-          for(i = 0; i < c; i++){
-            for(j = 0; j < N; j++){
+          for(i = 0; i < N; i++){
+            for(j = 0; j < c; j++){
               U[i][j] -=  alpha * dD[i][j];
             }
           }
@@ -198,7 +198,7 @@ public class FuzzyClustering {
      * Finding communities using conjugate gradient.
      * Applies the algorithm to calculate the fuzzy communities of each vertex
      * of the graph.
-     * @return  An array U[c][N] with the pertenence of each vertex to each 
+     * @return  An array U[N][c] with the pertenence of each vertex to each 
      *          class.
      */
     public double [][] findCommunities_GC(){
@@ -210,9 +210,9 @@ public class FuzzyClustering {
       boolean continueIteration = true;
       int t, n_max_iterations, i, j, k, l, m;
       
-      dD = new double [c][N]; // Partial derivative of D
-      g  = new double [c][N]; 
-      h  = new double [c][N];     
+      dD = new double [N][c]; // Partial derivative of D
+      g  = new double [N][c]; 
+      h  = new double [N][c];     
       
       // General constants
       zero = 0.0;
@@ -233,17 +233,17 @@ public class FuzzyClustering {
           for(i = 0; i < N; i++){
             aux = zero;
             for (m = 0; m < c; m++) {   // Computing s matrix elements 
-              aux += U[m][i] * U[m][l]; // on the fly
+              aux += U[i][m] * U[l][m]; // on the fly
             }
             sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
-                      * (inverse_of_c - U[k][i]);
+                      * (inverse_of_c - U[i][k]);
           }
-          dD[k][l] = two * sumatory; 
+          dD[l][k] = two * sumatory; 
         }
       }
 
-      for (i = 0; i < c; i++){
-        for (j =0; j < N; j++) {
+      for (i = 0; i < N; i++){
+        for (j =0; j < c; j++) {
           g[i][j] = -dD[i][j];
           dD[i][j] = h[i][j] = g[i][j];
         }
@@ -254,8 +254,8 @@ public class FuzzyClustering {
         
         // Computing minimum along the search direction (-dD)
         alpha = alpha (U, dD);
-        for(i = 0; i < c; i++){
-          for(j = 0; j < N; j++){
+        for(i = 0; i < N; i++){
+          for(j = 0; j < c; j++){
             U[i][j] -=  alpha * dD[i][j];
           }
         }
@@ -268,13 +268,13 @@ public class FuzzyClustering {
             for(i = 0; i < N; i++){
               aux = zero;
               for (m = 0; m < c; m++) {   // Computing s matrix elements 
-                aux += U[m][i] * U[m][l]; // on the fly
+                aux += U[i][m] * U[l][m]; // on the fly
               }
               sumatory += ((A.get(i, l) - aux) + (A.get(l, i) - aux)) 
-                        * (inverse_of_c - U[k][i]);
+                        * (inverse_of_c - U[i][k]);
             }
-            dD[k][l] = two * sumatory; 
-            if(Math.abs(dD[k][l]) > max) max = Math.abs(dD[k][l]);
+            dD[l][k] = two * sumatory; 
+            if(Math.abs(dD[l][k]) > max) max = Math.abs(dD[l][k]);
           }
         }
         System.out.println("Iteration " + t + ". Max abs val of dD " + max
@@ -287,16 +287,16 @@ public class FuzzyClustering {
           // Applying conjugate gradient
           
           gg = dgg = zero;
-          for (i = 0; i < c; i++){
-            for (j =0; j < N; j++) {
+          for (i = 0; i < N; i++){
+            for (j = 0; j < c; j++) {
               gg += g[i][j] *g[i][j];
               dgg += (dD[i][j] + g[i][j]) * dD[i][j];
             }
           }
           gam = dgg / gg; 
 
-          for (i = 0; i < c; i++){
-            for (j =0; j < N; j++) {
+          for (i = 0; i < N; i++){
+            for (j = 0; j < c; j++) {
               g[i][j] = -dD[i][j];
               dD[i][j] = h[i][j] = g[i][j] + gam * h[i][j];
             }
@@ -327,7 +327,7 @@ public class FuzzyClustering {
             for(j = 0; j < N; j++){
                 sij = 0.0;
                 for(k = 0; k < c; k++){
-                    sij += U[k][i] * U[k][j];
+                    sij += U[i][k] * U[j][k];
                 }
                 Q += (A.get(i, j) - ki * A.degree(j) * one_over_2m) * sij;
             }
@@ -344,7 +344,7 @@ public class FuzzyClustering {
      * @return  U
      */
     private double [][] getU(){
-        double [][] U = new double [c][N];
+        double [][] U = new double [N][c];
         int i, j;
         double sum_colum, d_constant, c_constant, alpha, Z_ran_variable, 
                 U_ran_variable, V, aux;
@@ -357,9 +357,9 @@ public class FuzzyClustering {
         d_constant = alpha - 1.0/3.0;
         c_constant = 1.0/Math.sqrt(9 * d_constant);
         
-        for(j = 0; j < N; j++){
+        for(i = 0; i < N; i++){
             sum_colum = 0;
-            for (i = 0; i < c; i++) {
+            for (j = 0; j < c; j++) {
                 continueIteration = true;
                 while (continueIteration) {
                     // Step 2 - Generate random variables Z and U
@@ -382,7 +382,7 @@ public class FuzzyClustering {
                 sum_colum += U[i][j];
             }
             
-            for(i = 0; i < c; i++){
+            for(j = 0; j < c; j++){
                 U[i][j] = U[i][j] / sum_colum;
             }
         }
@@ -563,7 +563,7 @@ public class FuzzyClustering {
         }
         
         return x;
-    }
+    }    
     
     /**
      * Function that calculates the error (D) used in the calculous of the 
@@ -574,12 +574,12 @@ public class FuzzyClustering {
      * @return          The value of D for the given input.
      */
     private double function(double alpha, double[][] U, double[][] dD){
-        double[][] Uaux = new double[c][N], s = new double[N][N];
+        double[][] Uaux = new double[N][c], s = new double[N][N];
         int i, j, k;
         double aux, D = 0.0;
         
-        for(i = 0; i < c; i++){
-            for(j = 0; j < N; j++){
+        for(i = 0; i < N; i++){
+            for(j = 0; j < c; j++){
                 Uaux[i][j] = U[i][j] - alpha * dD[i][j];
             }
         }
@@ -588,7 +588,7 @@ public class FuzzyClustering {
             for(j = 0; j < N; j++){
                 s[i][j] = 0.0;
                 for (k = 0; k < c; k++) {
-                    s[i][j] += Uaux[k][i] * Uaux[k][j];
+                    s[i][j] += Uaux[i][k] * Uaux[j][k];
                 }
             }
         }
@@ -600,8 +600,8 @@ public class FuzzyClustering {
             }
         }
         
-        return D;    // Returns the current value of D.
+        return D;
     }
     
+    
 }
-
