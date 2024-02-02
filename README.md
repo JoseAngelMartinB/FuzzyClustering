@@ -12,3 +12,6 @@ The input data should be the adjacency matrix of the desired graph, and should b
 ## Some extra information
 * The file `FuzzyClustering_2.java` is a improved version of the algoritm that allows parrallel computing.
 * The method `findCommunities_GC` implements the same functionality of as the method `findCommunities` but using CSR (Compressed Sparse Row) format to represent the adjacency matrix, with the consecuent improvement in the memory, while executing the program.
+
+## How to cite
+Alfoso Nino; Sebastián Reyes; José Ángel Martín-Baos; Camelia Muñoz-Caro. A General Approach to Fuzzy Community Detection in Social Networks. International Conference on Computer Communications and Networks (ICCCN). 07/2019. ISSN 1095-2055
